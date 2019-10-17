@@ -1,0 +1,222 @@
+---
+title: "Business Analytics Assignment 1"
+author: "SrushtiP"
+date: "10/14/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Question 1 A)
+
+```{r}
+pnorm(700, mean = 494, sd = 100, lower.tail = FALSE)
+```
+Probabbility of obtaining score greater than 700 is 0.01969927
+
+Question 1 B)
+
+```{r}
+pnorm(450, mean = 494, sd = 100) - pnorm(350, mean = 494, sd = 100)
+```
+Probability of getting a score between 350 and 450 on the same GMAT exam is 0.2550349.
+
+Question 2)
+
+```{r}
+Avg_per_dim_cost <- 449 - (qnorm(0.8665) * 36)
+Avg_per_dim_cost
+```
+The average per diem cost in Buenos Aires is 409.0401
+
+Question 3)
+
+```{r}
+Kent=c(59, 68, 78, 60) 
+Los_Angeles=c(90, 82, 78, 75)
+
+km <- mean(Kent)
+lm <- mean(Los_Angeles)
+
+numerator = sum((Kent - km)*(Los_Angeles - lm))
+denomenator = sqrt(sum((Kent - km)^2)) * sqrt(sum((Los_Angeles- lm)^2))
+Correlation <- numerator/denomenator
+
+Correlation
+
+cor(Kent, Los_Angeles)
+```
+Correlation is negative by 0.3566049
+
+Read the data file.
+
+```{r}
+library(dplyr)
+library(readr)
+
+OR_object <- read_csv("Online_Retail.csv")
+head(OR_object)
+summary(OR_object)
+```
+
+Question 4)
+
+```{r}
+Total_Country_Transaction <- tapply(OR_object$InvoiceNo, OR_object$Country, NROW) / NROW(OR_object$InvoiceNo) * 100
+subset(Total_Country_Transaction ,as.data.frame(Total_Country_Transaction) >1)
+```
+Countries accounting for more than 1% of the total transactions are EIRE, France, Germany, United Kingdom
+
+Question 5)
+
+```{r}
+OR_object$TransactionValue <- OR_object$Quantity * OR_object$UnitPrice
+summary(OR_object)
+```
+
+Question 6)
+
+```{r}
+Money_Spend <- aggregate(OR_object$TransactionValue, by = list(OR_object$Country), FUN = sum)
+colnames(Money_Spend)<- c("Country", "Transaction_Value_Spend")
+subset(Money_Spend, Money_Spend[2] > 130000)
+```
+Countries with total transaction exceeding 130,000 British Pound are Australia, EIRE, France, Germany, Netherlands, United Kingdom.
+
+Question 7)
+
+```{r}
+Temp=strptime(OR_object$InvoiceDate,format='%m/%d/%Y %H:%M',tz='GMT')
+OR_object$New_Invoice_Date <- as.Date(Temp)
+OR_object$New_Invoice_Date[20000]- OR_object$New_Invoice_Date[10]
+OR_object$Invoice_Day_Week= weekdays(OR_object$New_Invoice_Date)
+OR_object$New_Invoice_Hour = as.numeric(format(Temp, "%H"))
+OR_object$New_Invoice_Month = as.numeric(format(Temp, "%m"))
+
+head(OR_object)
+summary(OR_object)
+```
+
+Question 7 A)
+
+```{r}
+tapply(OR_object$InvoiceNo , OR_object$Invoice_Day_Week, NROW) / NROW(OR_object$InvoiceNo) * 100
+```
+
+Question 7 B)
+
+```{r}
+tapply(OR_object$TransactionValue , OR_object$Invoice_Day_Week, sum) / sum(OR_object$TransactionValue) * 100
+```
+
+Question 7 C)
+
+```{r}
+tapply(OR_object$TransactionValue , OR_object$New_Invoice_Month , sum) / sum(OR_object$TransactionValue) * 100
+```
+
+Question 7 D)
+
+```{r}
+OR_object$New_Invoice_Date[max(OR_object$TransactionValue[OR_object$Country == "Australia"])]
+```
+
+
+Question 7 E)
+
+```{r}
+which.min(abs(diff(table(OR_object$New_Invoice_Hour), lag = 1, differences = 2)))
+```
+
+As the minimum value is for the 20th hour hence the store can be closed for maintenence between 6 PM to 8 PM
+
+Question 8)
+
+```{r}
+Germany_Transaction <- subset(OR_object$TransactionValue, OR_object$Country == "Germany")
+hist(Germany_Transaction, xlim = c (-600, 900), breaks = 100 , xlab = "Transaction Value of Germany", main = "Germany")
+```
+
+Question 9)
+
+```{r}
+NumberOfTransaction <- tapply(OR_object$TransactionValue,OR_object$CustomerID, length)
+NumberOfTransaction[which.max(NumberOfTransaction)]
+
+ValuableTransaction <- tapply(OR_object$TransactionValue,OR_object$CustomerID, sum)
+ValuableTransaction[which.max(ValuableTransaction)]
+```
+Customer had the highest number of transactions is with CustomerID as 17841.
+Most Valuable customer is with customerID 14646.
+
+Question 10)
+
+```{r}
+colMeans(is.na(OR_object)) * 100
+```
+
+Question 11)
+
+```{r}
+NA_Sum <- function(input){
+  Total_NA <- sum(is.na(input))
+  return(Total_NA)
+}
+
+tapply(OR_object$CustomerID , OR_object$Country, NA_Sum)
+
+```
+
+Question 12)
+
+```{r}
+
+Customer_Visit_Count<-as.data.frame(table(OR_object$CustomerID))
+colnames(Customer_Visit_Count)<-c("CustomerID","NumberOfVisits")
+round(mean(abs(diff(Customer_Visit_Count$NumberOfVisits))))
+```
+Avgerage times a customer visits a store is 117 times.
+
+```{r}
+func <- function(x){
+  y <- abs(diff.Date(x))
+  z <- mean.difftime(x)
+  return(z)
+}
+  
+temp <- OR_object[order(OR_object$CustomerID),]
+xyz <- aggregate(temp$New_Invoice_Date, by = list(temp$CustomerID), FUN = func)
+View(xyz)
+
+xyz <- unlist(xyz$x)
+xyz<- xyz[xyz != 0]
+
+round(mean(xyz)/(24*60))
+```
+On an average a customer returns to the online store after 11 days.
+
+Question 13)
+
+```{r}
+NROW(OR_object$Quantity [OR_object$Quantity < 0 & OR_object$Country == "France"] ) / NROW(OR_object) * 100
+```
+Return rate for the French customers 0.02749539%
+
+Question 14)
+
+```{r}
+Revenue<- aggregate(OR_object$TransactionValue, by = list(OR_object$Description), FUN = sum)
+colnames(Revenue) <- c("Customer", "Revenue")
+Revenue[which.max(Revenue$Revenue),]
+
+```
+The Dotcom Postage customer is most valuable customer with highest revenue.
+
+Question 15)
+
+```{r}
+length(unique(OR_object$CustomerID))
+```
+There are 4373 unique customers in dataset.
