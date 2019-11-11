@@ -1,0 +1,187 @@
+---
+title: "Assignment 2 Business Analytics - Regression"
+author: "Srushti Padade"
+date: "11/10/2019"
+output:
+  html_document: default
+---
+Question 1 : Run the following code in R-studio to create two variables X and Y.
+
+```{r}
+set.seed(2017)
+X=runif(100)*10
+Y=X*4+3.45
+Y=rnorm(100)*0.29*Y+Y
+```
+
+a) Plot Y against X. Include a screenshot of the plot in your submission. Using the File menu you can save the graph as a picture on your computer.  Based on the plot do you think we can fit a linear model to explain Y based on X?
+
+```{r}
+plot(X,Y)
+```
+
+* On basis of the plotted graph we can see that the points of Y against X can form a linear line.
+* Thus assuming this, we can fit the linear regression model to explain the Y  based on X. 
+
+b) Construct a simple linear model of Y based on X. Write the equation that explains Y based on X. What is the accuracy of this model? 
+
+```{r}
+Linear_Model <- lm(formula = Y~X)
+summary(Linear_Model)
+```
+
+* Equation : Y = 4.4655 + 3.6108 X
+
+* Accuracy of the Model : 65.17 % (which tells that the model is relevently significant.)
+
+c) How the Coefficient of Determination, R2, of the model above is related to the correlation coefficient of X and Y?
+
+```{r}
+cor(Y,X)
+(cor(Y,X))^2
+```
+
+* Solution: 
+
+* Co- efficient of Determination = Co-efficient of Correlation ^ 2
+* Thus, here co-efficient of Determination is 0.6517187
+
+d) Investigate the appropriateness of using linear regression for this case (10 Marks). You may also find the story here relevant. 
+More useful hints: #residual analysis, #pattern of residuals, #normality of residuals.
+
+```{r}
+library(olsrr)
+
+#Graph for detecting violation of normality assumption.
+ols_plot_resid_qq(Linear_Model)
+
+#Correlation between observed residuals and expected residuals under normality.
+ols_test_correlation(Linear_Model)
+
+#Residual vs Fitted Values Plot
+ols_plot_resid_fit(Linear_Model)
+```
+
+* The residuals are spread randomly around 0, which indicates the Linear relationship with a fair homogeneity in error variance. 
+* Negligible residual is visibly away from the random pattern of the residuals indicating that there are no outliers.
+
+Thus, the linear model is appropriate for determining the relationship between Y and X.
+
+***
+
+Question 2:
+
+We will use the ‘mtcars’ dataset for this question. The dataset is already included in your R distribution. The dataset shows some of the characteristics of different cars. The following shows few samples (i.e. the first 6 rows) of the dataset. The description of the dataset can be found here.
+
+```{r}
+head(mtcars)
+
+Linear_Model_mtcars <- lm(hp~mpg+wt, data = mtcars)
+summary(Linear_Model_mtcars)
+```
+
+a) James wants to buy a car.  He and his friend, Chris, have different opinions about the Horse Power (hp) of cars. James think the weight of a car (wt) can be used to estimate the Horse Power of the car while Chris thinks the fuel consumption expressed in Mile Per Gallon (mpg), is a better estimator of the (hp). Who do you think is right? Construct simple linear models using mtcars data to answer the question. 
+
+* Solution:
+
+* According to the hypothesis testing from the above linear model we can see that the probability of weight (wt) being 0 is high i.e. 80% whereas, the same for Fuel Consumption being 0 is almost 0%. Hence we can say that the Fuel Consumption is statistically significant to determine the Horse power of the Car.
+* Thus, Chris is correct stating that the fuel consumption expressed in Mile Per Gallon (mpg), is a better estimator of the Horse Power(hp).
+
+b) Build a model that uses the number of cylinders (cyl) and the mile per gallon (mpg) values of a car to predict the car Horse Power (hp).
+
+```{r}
+LM_mtcars <- lm(hp~cyl+mpg, data = mtcars)
+summary(LM_mtcars)
+```
+
+I. Using this model, what is the estimated Horse Power of a car with 4 calendar and mpg of 22?
+
+```{r}
+Predict_Value_1 <- predict(LM_mtcars, data.frame(cyl = 4, mpg = 22), interval = "prediction")
+Predict_Value_1
+```
+
+OR
+
+* Equation: hp = 54.067+ 23.979 * cyl - 2.775 * mpg
+* hp = 54.067+ 23.979 * 4 - 2.775 * 22 = 88.93
+
+II. Construct an 85% confidence interval of your answer in the above question. Hint: use the predict function.
+
+```{r}
+Predict_Value_2 <- predict(LM_mtcars, data.frame(cyl = 4, mpg = 22), interval = "confidence", level = 0.85)
+Predict_Value_2
+```
+
+***
+
+Question 3:
+
+For this question, we are going to use BostonHousing dataset. The dataset is in ‘mlbench’ package, so we first need to instal the package, call the library and the load the dataset using the following commands and You should have a dataframe with the name of BostonHousing in your Global environment now.
+
+```{r}
+#install.packages('mlbench')
+library(mlbench)
+data(BostonHousing)
+```
+
+The dataset contains information about houses in different parts of Boston. Details of the dataset is explained here. Note the dataset is old, hence low house prices! 
+
+a) Build a model to estimate the median value of owner-occupied homes (medv)based on the following variables: crime crate (crim), proportion of residential land zoned for lots over 25,000 sq.ft (zn), the local pupil-teacher ratio (ptratio) and weather the whether the tract bounds Chas River(chas). Is this an accurate model? (Hint check R2 )
+
+```{r}
+LM_BostonHousing <- lm(medv~crim+zn+ptratio+chas, data = BostonHousing)
+summary(LM_BostonHousing)
+```
+
+* The R2 value i.e. Co-efficient of Determination is very low 35.99 %. Hence the model is not an accurate one.
+
+b) Use the estimated coefficient to answer these questions? 	
+
+I. Imagine two houses that are identical in all aspects but one bounds the Chas River and the other does not. Which one is more expensive and by how much?
+
+* Solution:
+
+* Chas1 is the probability of having a Chase River (Yes) over not having it (No).
+* The house bounded by the chase river is more expensive by the factor of 4.58393.
+
+II. Imagine two houses that are identical in all aspects but in the neighborhood of one of them the pupil-teacher ratio is 15 and in the other one is 18. Which one is more expensive and by how much? (Golden Question: 10 extra marks if you answer)
+
+* Solution:
+
+* As the ptratio decrease by a unit there is a 1.49367 times increase in medv.
+
+* Formula: Estimated Coefficient of ptratio * ptratio
+
+* Considering all the other variables to be 1
+
+* For ptratio 15: 
+* Housing_Price _15 = 49.91868 + (-0.26018) + 0.07073 + (-1.49367)*15 + 4.58393
+= 31.90811
+
+* For ptratio 15: 
+* Housing_Price _18 = 49.91868 + (-0.26018) + 0.07073 + (-1.49367)*18 + 4.58393
+= 27.4271
+
+* Cost_Difference = 31.90811 - 27.4271
+= 4.48101
+
+* The house having the pupil-teacher ratio 15 is more expensive by the factor of 4.48101 then that of the house having the pupil-teacher ratio 18.
+
+c) Which of the variables are statistically important (i.e. related to the house price)? Hint: use the p-values of the coefficients to answer.
+
+* Solution:
+
+* All the variables are statistically important in determining the house price as per the summary probability of the Variables in the built Linear model.
+
+d) Use the anova analysis and determine the order of importance of these four variables.
+
+```{r}
+anova(LM_BostonHousing)
+```
+
+* The order of importance of varibale in determining the Housing price is:
+1. Crime Rate (crim)
+2. Pupil-teacher ratio (ptratio)
+3. Proportion of residential land zoned for lots over 25,000 sq.ft (zn)
+4. Weather the whether the tract bounds Chas River(chas). 
